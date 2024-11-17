@@ -55,10 +55,8 @@ auto integrate_midpoint_1(std::vector<Point> &points, time_step_t time_step) -> 
 {
     for (auto &point : points)
     {
-
         glm::vec3 x_tilde = point.position + point.velocity * time_step * 0.5f;
         glm::vec3 v_tilde = point.velocity + point.force * time_step * 0.5f;
-        point.position += time_step * v_tilde;
         point.force = x_tilde;
         point.scratch = v_tilde;
     }
@@ -77,8 +75,10 @@ auto integrate_midpoint_2(std::vector<Point> &points, time_step_t time_step) -> 
 {
     for (auto &point : points)
     {
-        glm::vec3 v_tilde = point.scratch;
-        point.velocity += time_step * v_tilde;
+        vec3 v_tilde = point.scratch;
+        vec3 a_tilde = point.force / point.mass;
+        point.velocity += time_step * a_tilde;
+        point.position += time_step * v_tilde;
     }
 }
 
