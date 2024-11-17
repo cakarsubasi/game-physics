@@ -36,7 +36,7 @@ struct SceneMidpoint : public Scene
             .stiffness = 40.0,
             .initialLength = 1.0,
         }};
-        time_step = 0.001;
+        time_step = 0.005;
     }
 
     /// @brief Initialize the scene. Gets called every time the scene is switched to.

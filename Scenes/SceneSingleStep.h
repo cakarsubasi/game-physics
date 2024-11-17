@@ -4,7 +4,6 @@
 #include <iostream>
 #include "sim/Spring.h"
 
-
 struct SceneSingleStep : public Scene
 {
     std::vector<Point> points;
@@ -39,7 +38,6 @@ struct SceneSingleStep : public Scene
         time_step = 0.1;
     }
 
-    /// @brief Initialize the scene. Gets called every time the scene is switched to.
     virtual auto init() -> void override
     {
         initialize_values();
@@ -60,14 +58,9 @@ struct SceneSingleStep : public Scene
                   << "point 2:\n"
                   << points.at(1) << "\n";
     };
-    /// @brief Simulate a step in the scene. Gets called every frame before onDraw.
-    ///
-    /// This is where you should update the physics of the scene.
-    virtual auto simulateStep() -> void override {
-    };
-    /// @brief Draw the scene. Gets called every frame after simulateStep.
-    ///
-    /// This is where you should call the Renderer draw functions.
+
+    virtual auto simulateStep() -> void override {};
+
     virtual auto onDraw(Renderer &renderer) -> void override
     {
         renderer.drawWireCube(glm::vec3(0), glm::vec3(5), glm::vec3(1));
@@ -77,7 +70,7 @@ struct SceneSingleStep : public Scene
             renderer.drawSphere(point.position, 0.05);
         }
     };
-    /// @brief Define the GUI for the scene. Gets called every frame after onDraw.
+    
     virtual auto onGUI() -> void override {};
     virtual ~SceneSingleStep() override = default;
 };

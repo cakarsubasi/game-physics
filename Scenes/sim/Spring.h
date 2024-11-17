@@ -20,7 +20,7 @@ struct Point
     auto clear_force(void) -> void;
 };
 
-auto operator<<(std::ostream& os, const Point& point) -> std::ostream&;
+auto operator<<(std::ostream &os, const Point &point) -> std::ostream &;
 
 using index_t = size_t;
 using time_step_t = float;
@@ -39,16 +39,11 @@ struct Spring
     auto add_to_end_points(std::vector<Point> &points) -> void;
 };
 
-
 auto integrate_positions_euler(std::vector<Point> &points, time_step_t time_step) -> void;
 auto integrate_velocities_euler(std::vector<Point> &points, time_step_t time_step) -> void;
-
 
 auto integrate_midpoint_1(std::vector<Point> &points, time_step_t time_step) -> void;
 auto integrate_midpoint_2(std::vector<Point> &points, time_step_t time_step) -> void;
 
-
-auto euler_one_step(std::vector<Point>& points, std::vector<Spring>& springs, time_step_t time_step) -> void;
-auto midpoint_one_step(std::vector<Point>& points, std::vector<Spring>& springs, time_step_t time_step) -> void;
-
-
+auto euler_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step) -> void;
+auto midpoint_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step) -> void;

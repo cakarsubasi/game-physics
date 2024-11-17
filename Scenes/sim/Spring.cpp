@@ -6,17 +6,17 @@ auto Point::clear_force(void) -> void
 }
 
 /// @brief printing for Point
-/// @param os 
-/// @param point 
-/// @return 
-auto operator<<(std::ostream& os, const Point& point) -> std::ostream&
+/// @param os
+/// @param point
+/// @return
+auto operator<<(std::ostream &os, const Point &point) -> std::ostream &
 {
-    os << "pos: " 
-        << point.position << "\n" 
-        << "vel: "
-        << point.velocity << "\n"
-        << "acc: "
-        << (point.force / point.mass);
+    os << "pos: "
+       << point.position << "\n"
+       << "vel: "
+       << point.velocity << "\n"
+       << "acc: "
+       << (point.force / point.mass);
     return os;
 }
 
@@ -34,7 +34,6 @@ inline auto Spring::add_to_end_points(std::vector<Point> &points) -> void
     points.at(point1).force = -force;
     points.at(point2).force = force;
 }
-
 
 auto integrate_positions_euler(std::vector<Point> &points, time_step_t time_step) -> void
 {
@@ -56,7 +55,7 @@ auto integrate_midpoint_1(std::vector<Point> &points, time_step_t time_step) -> 
 {
     for (auto &point : points)
     {
-        
+
         glm::vec3 x_tilde = point.position + point.velocity * time_step * 0.5f;
         glm::vec3 v_tilde = point.velocity + point.force * time_step * 0.5f;
         point.position += time_step * v_tilde;
@@ -77,13 +76,13 @@ auto Spring::compute_elastic_forces_midpoint(std::vector<Point> const &points) -
 auto integrate_midpoint_2(std::vector<Point> &points, time_step_t time_step) -> void
 {
     for (auto &point : points)
-    { 
+    {
         glm::vec3 v_tilde = point.scratch;
         point.velocity += time_step * v_tilde;
     }
 }
 
-auto euler_one_step(std::vector<Point>& points, std::vector<Spring>& springs, time_step_t time_step) -> void
+auto euler_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step) -> void
 {
 
     for (auto &point : points)
@@ -101,7 +100,7 @@ auto euler_one_step(std::vector<Point>& points, std::vector<Spring>& springs, ti
     integrate_velocities_euler(points, time_step);
 }
 
-auto midpoint_one_step(std::vector<Point>& points, std::vector<Spring>& springs, time_step_t time_step) -> void
+auto midpoint_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step) -> void
 {
     for (auto &point : points)
     {
