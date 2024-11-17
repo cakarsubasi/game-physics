@@ -25,14 +25,14 @@ auto Spring::compute_elastic_forces(std::vector<Point> const &points) -> void
     auto pos1 = points.at(point1).position;
     auto pos2 = points.at(point2).position;
     currentLength = (pos1 - pos2).length();
-    force = -stiffness * (initialLength - currentLength) * (pos1 - pos2) / (currentLength + 1e-9f);
+    force = -stiffness * (initialLength - currentLength) * (pos1 - pos2) / (currentLength + 1e-6f);
     // Hooke's law
 }
 
 inline auto Spring::add_to_end_points(std::vector<Point> &points) -> void
 {
-    points.at(point1).force = -force;
-    points.at(point2).force = force;
+    points.at(point1).force += -force;
+    points.at(point2).force += force;
 }
 
 auto integrate_positions_euler(std::vector<Point> &points, time_step_t time_step) -> void
@@ -57,7 +57,7 @@ auto integrate_midpoint_1(std::vector<Point> &points, time_step_t time_step) -> 
     {
         glm::vec3 x_tilde = point.position + point.velocity * time_step * 0.5f;
         glm::vec3 v_tilde = point.velocity + point.force * time_step * 0.5f;
-        point.force = x_tilde;
+        point.scratch2= x_tilde;
         point.scratch = v_tilde;
     }
 }
@@ -67,7 +67,7 @@ auto Spring::compute_elastic_forces_midpoint(std::vector<Point> const &points) -
     auto pos1 = points.at(point1).force; // x_tilde
     auto pos2 = points.at(point2).force; // x_tilde
     currentLength = (pos1 - pos2).length();
-    force = -stiffness * (initialLength - currentLength) * (pos1 - pos2) / (currentLength + 1e-9f);
+    force = -stiffness * (initialLength - currentLength) * (pos1 - pos2) / (currentLength + 1e-6f);
     // Hooke's law
 }
 
@@ -76,7 +76,7 @@ auto integrate_midpoint_2(std::vector<Point> &points, time_step_t time_step) -> 
     for (auto &point : points)
     {
         vec3 v_tilde = point.scratch;
-        vec3 a_tilde = point.force / point.mass;
+        vec3 a_tilde = point.scratch2 / point.mass;
         point.velocity += time_step * a_tilde;
         point.position += time_step * v_tilde;
     }

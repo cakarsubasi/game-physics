@@ -13,6 +13,7 @@ struct Point
     vec3 velocity;
     vec3 force;
     vec3 scratch;
+    vec3 scratch2;
     float mass;
     float damping;
     bool fixed;
