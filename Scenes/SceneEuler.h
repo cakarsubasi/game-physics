@@ -62,6 +62,9 @@ struct SceneEuler : public Scene
             renderer.drawLine(pos1, pos2, {0.6, 0.3, 0.3});
         }
     };
-    virtual auto onGUI() -> void override {};
+    virtual auto onGUI() -> void override {
+
+        ImGui::SliderFloat("Time step", &time_step, 0.001, 0.1);
+    };
     virtual ~SceneEuler() override = default;
 };

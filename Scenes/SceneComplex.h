@@ -278,7 +278,7 @@ struct SceneComplex : public Scene
 
     virtual auto onGUI() -> void override
     {
-        ImGui::SliderFloat("Time step", &time_step, 0.0001, 0.5);
+        ImGui::SliderFloat("Time step", &time_step, 0.001, 0.1);
         ImGui::Combo("Integration Method", &method, "Euler\0Midpoint\0", -1);
     };
     virtual ~SceneComplex() override = default;
