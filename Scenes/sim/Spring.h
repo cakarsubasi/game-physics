@@ -32,7 +32,6 @@ struct Spring
     index_t point2;
     float stiffness;
     float initialLength;
-    float currentLength;
     glm::vec3 force;
 
     auto compute_elastic_forces(std::vector<Point> const &points) -> void;

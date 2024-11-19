@@ -69,6 +69,10 @@ struct SceneMidpoint : public Scene
         }
     };
     /// @brief Define the GUI for the scene. Gets called every frame after onDraw.
-    virtual auto onGUI() -> void override {};
+    virtual auto onGUI() -> void override {
+
+        ImGui::SliderFloat("Time step", &time_step, 0.0001, 0.5);
+
+    };
     virtual ~SceneMidpoint() override = default;
 };
