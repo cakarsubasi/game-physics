@@ -67,109 +67,96 @@ struct SceneComplex : public Scene
             .max = {2.5, 2.5, 2.5},
         };
         points = {
-            Point{ // 0 og
+            Point{
+                // 0 og
                 .position = {0.0, 0.0, 0.0},
                 .velocity = {-1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 1 og
+            Point{
+                // 1 og
                 .position = {0.0, 2.0, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 2 tri
+            Point{
+                // 2 tri
                 .position = {0.2, 2.0, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 3 tri
+            Point{
+                // 3 tri
                 .position = {0.4, 2.0, 0.0},
                 .velocity = {0.0, 0.5, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 4 tri
+            Point{
+                // 4 tri
                 .position = {0.0, 2.2, 0.0},
                 .velocity = {0.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 5 tri
+            Point{
+                // 5 tri
                 .position = {0.0, 2.4, 0.0},
                 .velocity = {0.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 6 quad
+            Point{
+                // 6 quad
                 .position = {0.0, 1.0, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 7 quad
+            Point{
+                // 7 quad
                 .position = {0.2, 1.5, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
-                .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
+                .mass = 10.0
             },
-            Point{ // 8 quad
+            Point{
+                // 8 quad
                 .position = {0.4, 1.7, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 9 quad
+            Point{
+                // 9 quad
                 .position = {0.0, 1.9, 0.2},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 10 wall
+            Point{
+                // 10 wall
                 .position = {0.0, 2.5, 0.0},
                 .velocity = {0.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10000000000.0,
-                .damping = 0.0,
-                .fixed = true,
             },
-            Point{ // 11 wall
+            Point{
+                // 11 wall
                 .position = {0.0, 2.0, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
-            Point{ // 12 wall
+            Point{
+                // 12 wall
                 .position = {0.0, 1.5, 0.0},
                 .velocity = {1.0, 0.0, 0.0},
                 .force = {0.0, 0.0, 0.0},
                 .mass = 10.0,
-                .damping = 0.0,
-                .fixed = false,
             },
         };
         springs = {
@@ -246,7 +233,8 @@ struct SceneComplex : public Scene
     {
         enforce_bbox(bounding_box, points);
         auto gravity_strength = 0.0f;
-        if (gravity) {
+        if (gravity)
+        {
             gravity_strength = 9.81f;
         }
 
@@ -282,7 +270,8 @@ struct SceneComplex : public Scene
 
     virtual auto onGUI() -> void override
     {
-        if (ImGui::Button("Enable/disable Gravity")) {
+        if (ImGui::Button("Enable/disable Gravity"))
+        {
             gravity = !gravity;
         }
         ImGui::SliderFloat("Time step", &time_step, 0.001, 0.1);

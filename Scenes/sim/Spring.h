@@ -15,8 +15,6 @@ struct Point
     vec3 scratch;
     vec3 scratch2;
     float mass;
-    float damping;
-    bool fixed;
 
     auto clear_force(void) -> void;
 };
@@ -32,7 +30,7 @@ struct Spring
     index_t point2;
     float stiffness;
     float initialLength;
-    glm::vec3 force;
+    vec3 force;
 
     auto compute_elastic_forces(std::vector<Point> const &points) -> void;
     auto compute_elastic_forces_midpoint(std::vector<Point> const &points) -> void;

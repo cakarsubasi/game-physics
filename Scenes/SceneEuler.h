@@ -17,16 +17,12 @@ struct SceneEuler : public Scene
             .velocity = {-1.0, 0.0, 0.0},
             .force = {0.0, 0.0, 0.0},
             .mass = 10.0,
-            .damping = 0.0,
-            .fixed = false,
         };
         auto point2 = Point{
             .position = {0.0, 2.0, 0.0},
             .velocity = {1.0, 0.0, 0.0},
             .force = {0.0, 0.0, 0.0},
             .mass = 10.0,
-            .damping = 0.0,
-            .fixed = false,
         };
         points = {point1, point2};
         springs = {Spring{
