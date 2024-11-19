@@ -245,14 +245,18 @@ struct SceneComplex : public Scene
     virtual auto simulateStep() -> void override
     {
         enforce_bbox(bounding_box, points);
+        auto gravity_strength = 0.0f;
+        if (gravity) {
+            gravity_strength = 9.81f;
+        }
 
         if (method == 0)
         {
-            euler_one_step(points, springs, time_step);
+            euler_one_step(points, springs, time_step, gravity_strength);
         }
         else if (method == 1)
         {
-            midpoint_one_step(points, springs, time_step);
+            midpoint_one_step(points, springs, time_step, gravity_strength);
         }
         else
         {
@@ -278,6 +282,9 @@ struct SceneComplex : public Scene
 
     virtual auto onGUI() -> void override
     {
+        if (ImGui::Button("Enable/disable Gravity")) {
+            gravity = !gravity;
+        }
         ImGui::SliderFloat("Time step", &time_step, 0.001, 0.1);
         ImGui::Combo("Integration Method", &method, "Euler\0Midpoint\0", -1);
     };

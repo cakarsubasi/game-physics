@@ -83,12 +83,13 @@ auto integrate_midpoint_2(std::vector<Point> &points, time_step_t time_step) -> 
     }
 }
 
-auto euler_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step) -> void
+auto euler_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step, float gravity) -> void
 {
 
     for (auto &point : points)
     {
         point.clear_force();
+        point.force -= gravity;
     }
 
     for (auto &spring : springs)
@@ -101,11 +102,12 @@ auto euler_one_step(std::vector<Point> &points, std::vector<Spring> &springs, ti
     integrate_velocities_euler(points, time_step);
 }
 
-auto midpoint_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step) -> void
+auto midpoint_one_step(std::vector<Point> &points, std::vector<Spring> &springs, time_step_t time_step, float gravity) -> void
 {
     for (auto &point : points)
     {
         point.clear_force();
+        point.force -= gravity;
     }
 
     for (auto &spring : springs)
@@ -119,6 +121,7 @@ auto midpoint_one_step(std::vector<Point> &points, std::vector<Spring> &springs,
     for (auto &point : points)
     {
         point.clear_force();
+        point.force -= gravity;
     }
 
     for (auto &spring : springs)

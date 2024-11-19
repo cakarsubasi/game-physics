@@ -44,7 +44,7 @@ struct SceneEuler : public Scene
     };
     virtual auto simulateStep() -> void override
     {
-        euler_one_step(points, springs, time_step);
+        euler_one_step(points, springs, time_step, 0.0f);
     };
     virtual auto onDraw(Renderer &renderer) -> void override
     {

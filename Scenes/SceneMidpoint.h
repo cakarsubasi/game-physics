@@ -48,7 +48,7 @@ struct SceneMidpoint : public Scene
     ///
     /// This is where you should update the physics of the scene.
     virtual auto simulateStep() -> void override {
-        midpoint_one_step(points, springs, time_step);
+        midpoint_one_step(points, springs, time_step, 0.0f);
     };
     /// @brief Draw the scene. Gets called every frame after simulateStep.
     ///

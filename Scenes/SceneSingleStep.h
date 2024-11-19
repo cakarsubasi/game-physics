@@ -41,7 +41,7 @@ struct SceneSingleStep : public Scene
     virtual auto init() -> void override
     {
         initialize_values();
-        euler_one_step(points, springs, time_step);
+        euler_one_step(points, springs, time_step, 0.0f);
 
         std::cout << "Euler:\n"
                   << "point 1:\n"
@@ -50,7 +50,7 @@ struct SceneSingleStep : public Scene
                   << points.at(1) << "\n";
 
         initialize_values();
-        midpoint_one_step(points, springs, time_step);
+        midpoint_one_step(points, springs, time_step, 0.0f);
 
         std::cout << "\nMidpoint:\n"
                   << "point 1:\n"
