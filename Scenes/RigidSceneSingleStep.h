@@ -13,7 +13,6 @@ using local3 = glm::vec3;
 using global3 = glm::vec3;
 using mat3x3 = glm::mat3x3;
 using f32 = float;
-using scalar = f32;
 using time_step_t = f32;
 
 // we are cheating a bit here, since the bounding
@@ -24,13 +23,22 @@ struct Aabb {
 };
 
 auto quaternion_to_rotation(Quaternion r) -> mat3x3 {
-    // TODO
-    auto id = glm::identity<mat3x3>();
+    // TODO: check this is correct
+    f32 s = r.w();
+    vec3 v = r.v();
+    f32 x = v.x;
+    f32 y = v.y;
+    f32 z = v.z;
+    auto id = glm::zero<mat3x3>();
+    id[0] = vec3 { 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - s * z), 2.0f * (x * z + s * y)};
+    id[1] = vec3 { 2.0f * (x * y + s * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - s * x)};
+    id[2] = vec3 { 2.0f * (x * z - s * y), 2.0f * (y * z + s * x), 1.0f - 2.0f * (x * x + y * y) };
     return id;
 }
 
 auto euler_to_quaternion(vec3 euler) -> Quaternion {
     // TODO
+
     return Quaternion { 0.0f };
 }
 
