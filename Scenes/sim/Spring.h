@@ -17,6 +17,15 @@ struct Point
     float mass;
 
     auto clear_force(void) -> void;
+
+    Point(vec3 position, vec3 velocity, float mass) 
+    : position {position}, 
+    velocity {velocity}, 
+    force { 0.0f },
+    scratch {0.0f},
+    scratch2 {0.0f},
+    mass {mass}
+    {}
 };
 
 auto operator<<(std::ostream &os, const Point &point) -> std::ostream &;
