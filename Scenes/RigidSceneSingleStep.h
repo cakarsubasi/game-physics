@@ -1,10 +1,13 @@
-
 #pragma once
+
 #include "Scene.h"
-#include "sim/Quaternion.h"
+// #include "sim/Quaternion.h"
 #include "sim/glm_print.h"
+#include <glm/gtx/quaternion.hpp>
 #include <array>
 #include <iostream>
+
+#define DEBUG
 
 using vec3 = glm::vec3;
 using vec4 = glm::vec4;
@@ -15,49 +18,53 @@ using global3 = glm::vec3;
 using mat3x3 = glm::mat3x3;
 using f32 = float;
 using time_step_t = f32;
+using Quaternion = glm::quat;
 
 // we are cheating a bit here, since the bounding
 // box will be in local space
-struct Aabb {
+struct Aabb
+{
     vec3 min;
     vec3 max;
 };
 
-auto quaternion_to_rotation(Quaternion r) -> mat3x3 {
+auto quaternion_to_rotation(Quaternion r) -> mat3x3
+{
     // TODO: check this is correct
-    f32 s = r.w();
-    vec3 v = r.v();
-    f32 x = v.x;
-    f32 y = v.y;
-    f32 z = v.z;
-    auto id = glm::zero<mat3x3>();
-    id[0] = vec3 { 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - s * z), 2.0f * (x * z + s * y)};
-    id[1] = vec3 { 2.0f * (x * y + s * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - s * x)};
-    id[2] = vec3 { 2.0f * (x * z - s * y), 2.0f * (y * z + s * x), 1.0f - 2.0f * (x * x + y * y) };
-    return id;
+    // f32 s = r.w();
+    // vec3 v = r.v();
+    // f32 x = v.x;
+    // f32 y = v.y;
+    // f32 z = v.z;
+    // auto id = glm::zero<mat3x3>();
+    // id[0] = vec3 { 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - s * z), 2.0f * (x * z + s * y)};
+    // id[1] = vec3 { 2.0f * (x * y + s * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - s * x)};
+    // id[2] = vec3 { 2.0f * (x * z - s * y), 2.0f * (y * z + s * x), 1.0f - 2.0f * (x * x + y * y) };
+    return glm::toMat3(r);
 }
 
-struct Force {
+struct Force
+{
     vec3 point;
     vec3 strength;
 };
 
-constexpr auto box_inertia(Aabb extent, f32 mass) -> mat3x3 {
+constexpr auto box_inertia(Aabb extent, f32 mass) -> mat3x3
+{
     // are we using the correct extent values?
     auto const w = extent.max.x - extent.min.x;
     auto const h = extent.max.y - extent.min.y;
     auto const d = extent.max.z - extent.min.z;
     f32 const c = 1.0f / 12.0f;
-    return mat3x3 { 
-        vec3 { c * mass * (h*h + d*d), 0.0f, 0.0f },
-        vec3 { 0.0f, c * mass * (w*w + h*h), 0.0f },
-        vec3 { 0.0f, 0.0f, c * mass * (w*w + d*d) },
-     };
+    return mat3x3{
+        vec3{c * mass * (h * h + d * d), 0.0f, 0.0f},
+        vec3{0.0f, c * mass * (w * w + h * h), 0.0f},
+        vec3{0.0f, 0.0f, c * mass * (w * w + d * d)},
+    };
 }
 
-
-
-auto box_inertia0(Aabb bbox, float mass) -> mat3x3 {
+auto box_inertia0(Aabb bbox, float mass) -> mat3x3
+{
     auto id = glm::zero<mat3x3>();
     // z-up need to check if this is correct
     float h = bbox.max.z - bbox.min.z;
@@ -69,9 +76,9 @@ auto box_inertia0(Aabb bbox, float mass) -> mat3x3 {
     return id;
 }
 
-
-struct RigidBody {
-    Aabb extent;
+struct RigidBody
+{
+    const Aabb extent;
 
     global3 center_of_mass; // x_cm
     vec3 velocity_lin;      // v_cm
@@ -79,94 +86,127 @@ struct RigidBody {
     Quaternion orientation; // r
     vec3 velocity_ang;      // w
 
-    f32 mass;               // M
-    mat3x3 inertia_0_inv;   // I_0^-1
-    mat3x3 inertia_inv;     // Rot_r I_0^-1 Rot_r^T 
+    f32 mass;             // M
+    mat3x3 inertia_0_inv; // I_0^-1
+    mat3x3 inertia_inv;   // Rot_r I_0^-1 Rot_r^T
 
-    local3 torque;          // q - cleared
-    vec3 angular_moment;    // L
+    local3 torque;       // q - cleared
+    vec3 angular_moment; // L
 
     RigidBody() = delete;
 
     RigidBody(Aabb extent,
-              global3 center_of_mass, 
+              global3 center_of_mass,
               vec3 linear_velocity,
               Quaternion orientation,
               vec3 velocity_rot,
               f32 mass,
-              mat3x3 inertia_inv) :
-              extent { extent },
-              center_of_mass { center_of_mass },
-              velocity_lin { linear_velocity },
-              orientation { orientation },
-              velocity_ang { velocity_rot },
-              mass { mass },
-              inertia_0_inv { inertia_inv },
-              angular_moment { vec3 { 0.0f} }
-             {}
-
-    static auto new_still(Aabb extent, global3 center_of_mass, Quaternion orientation, f32 mass, mat3x3 inertia_inv) -> RigidBody {
-        auto zero = vec3 { 0.0f };
-        return RigidBody { extent, center_of_mass, zero, orientation, zero, mass, inertia_inv };
+              mat3x3 inertia_inv) : extent{extent},
+                                    center_of_mass{center_of_mass},
+                                    velocity_lin{linear_velocity},
+                                    orientation{orientation},
+                                    velocity_ang{velocity_rot},
+                                    mass{mass},
+                                    inertia_0_inv{inertia_inv},
+                                    angular_moment{vec3{0.0f}}
+    {
     }
 
-    auto inline clear_torque() -> void {
-        torque = vec3 { 0.0f };
+    static auto new_still(Aabb extent, global3 center_of_mass, Quaternion orientation, f32 mass, mat3x3 inertia_inv) -> RigidBody
+    {
+        auto zero = vec3{0.0f};
+        return RigidBody{extent, center_of_mass, zero, orientation, zero, mass, inertia_inv};
     }
 
-    auto inline add_torque(Force const& force) -> void {
+    auto inline clear_torque() -> void
+    {
+        torque = vec3{0.0f};
+    }
+
+    auto inline add_torque(Force const &force) -> void
+    {
         vec3 x_i = force.point - center_of_mass;
         torque += glm::cross(x_i, force.strength);
     }
 
-    auto inline update_r(time_step_t time_step) -> void {
-        auto inter = Quaternion {vec4 { 0.0f, velocity_ang }} * orientation;
-        orientation += inter * 0.5f * time_step; 
+    auto inline update_r(time_step_t time_step) -> void
+    {
+        Quaternion inter = Quaternion {};
+        inter.w = 0.0f;
+        inter[1] = velocity_ang[0];
+        inter[2] = velocity_ang[1];
+        inter[3] = velocity_ang[2];
+        inter = inter * orientation;
+        orientation += (inter * 0.5f * time_step);
     }
 
-    auto inline update_L(time_step_t time_step) -> void {
+    auto inline update_L(time_step_t time_step) -> void
+    {
         angular_moment += time_step * torque;
     }
 
-    auto inline update_I() -> void {
+    auto inline update_I() -> void
+    {
         mat3x3 rot = quaternion_to_rotation(orientation);
         mat3x3 rot_transpose = glm::transpose(rot);
         // TODO: check if this is correct matmul
         inertia_inv = rot * inertia_0_inv * rot_transpose;
     }
 
-    auto inline update_w() -> void {
+    auto inline update_w() -> void
+    {
         velocity_ang = inertia_inv * angular_moment;
     }
 
     // convert position in local coordinates to global coordinates
-    auto inline position_of(vec3 local) -> vec3 {
-        return center_of_mass + orientation.rotate(local);
+    auto inline position_of(vec3 local) -> vec3
+    {
+        return center_of_mass + glm::rotate(orientation, local);
+        // return center_of_mass + orientation.rotate(local);
     }
 
     // get the global velocity of given local position
-    auto inline velocity_of(vec3 local) const -> vec3 {
+    auto inline velocity_of(vec3 local) const -> vec3
+    {
         return velocity_lin + glm::cross(velocity_ang, local);
     }
 };
 
-auto draw_rigidbody(Renderer& renderer, RigidBody const& body) -> void {
+auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
+{
+    Aabb boundary = body.extent;
+    vec3 p0 = boundary.max;
+    vec3 p1 = boundary.min;
+    vec3 p2 = vec3{p0.x, p1.y, p0.z}; // top
+    vec3 p3 = vec3{p1.x, p0.y, p0.z}; // top
+    vec3 p4 = vec3{p1.x, p1.y, p0.z}; // top
+    vec3 p5 = vec3{p0.x, p1.y, p1.z}; // top
+    vec3 p6 = vec3{p1.x, p0.y, p1.z}; // top
+    vec3 p7 = vec3{p1.x, p1.y, p1.z}; // top
+
+    vec3 x_cm = body.center_of_mass;
+    Quaternion r = body.orientation;
+    vec3 scale = boundary.max - boundary.min;
+    renderer.drawCube(x_cm, r, scale);
     // TODO
 }
 
-auto draw_force(Renderer& renderer, Force const& force) -> void {
+auto draw_force(Renderer &renderer, Force const &force) -> void
+{
     // TODO
 }
 
-auto total_force(std::vector<Force> const& forces) -> vec3 {
-    auto total = vec3 {0.0f};
-    for (auto const& force: forces) {
+auto total_force(std::vector<Force> const &forces) -> vec3
+{
+    auto total = vec3{0.0f};
+    for (auto const &force : forces)
+    {
         total += force.strength;
     }
     return total;
 }
 
-auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const& forces, time_step_t time_step, f32 gravity) -> void
+auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void
 {
     vec3 force_pos = total_force(forces);
 
@@ -174,46 +214,53 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const& fo
     for (auto &body : bodies)
     {
         body.clear_torque();
-        for (auto const& force : forces) {
+        for (auto const &force : forces)
+        {
             body.add_torque(force);
         }
+#ifdef DEBUG
         auto q0 = body.torque; // -0.25 0.25 -0.2
         std::cout << "q0: " << q0 << "\n";
+#endif
     }
 
-    for (auto &body: bodies) {
+    for (auto &body : bodies)
+    {
+#ifdef DEBUG
         auto x_cm = body.center_of_mass; // 0
         auto v_cm = body.velocity_lin;   // 0
         auto r_0 = body.orientation;     // (0.707, 0, 0, 0.707)
         auto L_0 = body.angular_moment;  // 0
 
         std::cout << "x_cm: " << x_cm << "\n"
-        << "v_cm: " << v_cm << "\n"
-        << "r_0: " << r_0 << "\n"
-        << "L_0: " << L_0 << "\n";
+                  << "v_cm: " << v_cm << "\n"
+                  << "r_0: " << r_0 << "\n"
+                  << "L_0: " << L_0 << "\n";
+#endif
 
         // euler step 1
         body.center_of_mass += time_step * body.velocity_lin;
         body.velocity_lin += time_step * force_pos / body.mass;
 
         auto x_cm1 = body.center_of_mass; // 0
-        auto v_cm1 = body.velocity_lin; // (1, 1, 0)
+        auto v_cm1 = body.velocity_lin;   // (1, 1, 0)
         // update variables
         body.update_r(time_step);
-        auto r_1 = body.orientation; // r0
         body.update_L(time_step);
-        auto L_1 = body.angular_moment; // -0.5 0.5 -0.4
         body.update_I();
         body.update_w();
         // Euler step 2 is not performed here, but rather
         // when we draw the rigidbody since each point corresponds to a corner of our bbox
 
+#ifdef DEBUG
+        auto r_1 = body.orientation;    // same as r0
+        auto L_1 = body.angular_moment; // -0.5 0.5 -0.4
         std::cout << "x_cm1: " << x_cm1 << "\n"
-        << "v_cm1: " << v_cm1 << "\n"
-        << "r_1: " << r_1 << "\n"
-        << "L_1: " << L_1 << "\n";
+                  << "v_cm1: " << v_cm1 << "\n"
+                  << "r_1: " << r_1 << "\n"
+                  << "L_1: " << L_1 << "\n";
+#endif
     }
-
 }
 
 struct RigidSceneSingleStep : public Scene
@@ -222,59 +269,66 @@ struct RigidSceneSingleStep : public Scene
     std::vector<Force> forces;
     time_step_t time_step;
 
+    bool play = false;
+
     auto initialize_values() -> void
     {
-        auto const extent = vec3 { 1.0f, 0.6f, 0.5f };
-        auto const bbox = Aabb { -extent, extent };
-        auto const x_cm = vec3 { 0.0f };
+        auto const extent = vec3{1.0f, 0.6f, 0.5f};
+        auto const bbox = Aabb{-extent, extent};
+        auto const x_cm = vec3{0.0f};
 
-        auto const orientation = Quaternion::from_euler(vec3 {0.0f, 0.0f, 0.5f * glm::pi<f32>()});
+        auto const orientation = Quaternion{vec3{0.0f, 0.0f, 0.5f * glm::pi<f32>()}};
+        // Quaternion::from_euler(vec3 {0.0f, 0.0f, 0.5f * glm::pi<f32>()});
 
         std::cout << "orientation(r): " << orientation << "\n";
 
         f32 const mass = 2.0f;
         auto inertia_inv = glm::inverse(box_inertia(bbox, mass));
-        
+
         rigid_bodies = {
-            RigidBody::new_still(bbox, x_cm, orientation, mass, inertia_inv)
-        };
+            RigidBody::new_still(bbox, x_cm, orientation, mass, inertia_inv)};
 
         time_step = 2.0f;
-        
-        forces = {
-            Force {
-                vec3 { 0.3f, 0.5f, 0.25f },
-                vec3 { 1.0f, 1.0f, 0.0f },
-            }
-        };
 
+        forces = {
+            Force{
+                vec3{0.3f, 0.5f, 0.25f},
+                vec3{1.0f, 1.0f, 0.0f},
+            }};
     }
 
     virtual auto init() -> void override
     {
         initialize_values();
-        auto const poi = vec3 { -0.3f, -0.5f, -0.25f };
+        auto const poi = vec3{-0.3f, -0.5f, -0.25f};
         euler_one_step(rigid_bodies, forces, time_step, 0.0f);
 
-        auto& rb = rigid_bodies.at(0);
+        auto &rb = rigid_bodies.at(0);
         std::cout << "pos: " << rb.position_of(poi) << "\n"
                   << "vel: " << rb.velocity_of(poi) << "\n";
     };
 
-    virtual auto simulateStep() -> void override {};
+    virtual auto simulateStep() -> void override {
+        if (play) {
+            euler_one_step(rigid_bodies, forces, 0.005, 0.0);   
+        }
+    };
 
     virtual auto onDraw(Renderer &renderer) -> void override
     {
         renderer.drawWireCube(glm::vec3(0), glm::vec3(5), glm::vec3(1));
-        for (auto const &body: rigid_bodies) {
+        for (auto const &body : rigid_bodies)
+        {
             draw_rigidbody(renderer, body);
         }
-        for (auto const &force: forces) {
+        for (auto const &force : forces)
+        {
             draw_force(renderer, force);
         }
     };
-    
-    virtual auto onGUI() -> void override {};
+
+    virtual auto onGUI() -> void override {
+        ImGui::Checkbox("Play", &play);
+    };
     virtual ~RigidSceneSingleStep() override = default;
 };
-

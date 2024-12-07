@@ -40,3 +40,10 @@ auto operator<<(std::ostream &os, const glm::mat3x3 &mat) -> std::ostream &
        << " ]";
     return os;
 }
+
+auto operator<<(std::ostream &os, const glm::quat &q) -> std::ostream &
+{
+    float w = q.w;
+    os << "w: " << q.w << ", v:" << glm::vec3 { q.x, q.y, q.z };
+    return os;
+}
