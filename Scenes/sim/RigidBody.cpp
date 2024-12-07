@@ -1,7 +1,7 @@
 #include "RigidBody.h"
 #include "glm_print.h"
 
-//#define DEBUG
+// #define DEBUG
 
 auto box_inertia0(vec3 extent, float mass) -> mat3x3
 {
@@ -97,5 +97,25 @@ auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
 
 auto draw_force(Renderer &renderer, Force const &force) -> void
 {
-    renderer.drawLine(force.point, force.point + force.strength, vec3 { 0.8, 0.2, 0.2});
+    renderer.drawLine(force.point, force.point + force.strength, vec3{0.8, 0.2, 0.2});
+}
+
+auto calculate_impulse(
+    vec3 normal,
+    vec3 velocity_rel,
+    f32 elasticity,
+    f32 mass_a,
+    f32 mass_b,
+    mat3x3 inertia_a,
+    mat3x3 inertia_b,
+    vec3 x_a,
+    vec3 x_b) -> f32
+{
+    f32 top = -(1.0f + elasticity) * glm::dot(velocity_rel, normal);
+    vec3 bot1 = glm::cross(inertia_a * glm::cross(x_a, normal), x_a);
+    vec3 bot2 = glm::cross(inertia_b * glm::cross(x_b, normal), x_b);
+    f32 bot = 1.0f / mass_a + 1.0f / mass_b + glm::dot(bot1 + bot2, normal);
+    f32 impulse = top / bot;
+    assert(impulse >= 0.0f);
+    return impulse;
 }
