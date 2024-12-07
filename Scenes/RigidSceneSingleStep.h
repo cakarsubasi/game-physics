@@ -2,8 +2,9 @@
 
 #include "Scene.h"
 // #include "sim/Quaternion.h"
+#include "sim/RigidBody.h"
 #include "sim/glm_print.h"
-#include <glm/gtx/quaternion.hpp>
+//#include <glm/gtx/quaternion.hpp>
 #include <array>
 #include <iostream>
 
@@ -20,176 +21,28 @@ using f32 = float;
 using time_step_t = f32;
 using Quaternion = glm::quat;
 
-// we are cheating a bit here, since the bounding
-// box will be in local space
-struct Aabb
-{
-    vec3 min;
-    vec3 max;
-};
 
-auto quaternion_to_rotation(Quaternion r) -> mat3x3
-{
-    // TODO: check this is correct
-    // f32 s = r.w();
-    // vec3 v = r.v();
-    // f32 x = v.x;
-    // f32 y = v.y;
-    // f32 z = v.z;
-    // auto id = glm::zero<mat3x3>();
-    // id[0] = vec3 { 1.0f - 2.0f * (y * y + z * z), 2.0f * (x * y - s * z), 2.0f * (x * z + s * y)};
-    // id[1] = vec3 { 2.0f * (x * y + s * z), 1.0f - 2.0f * (x * x + z * z), 2.0f * (y * z - s * x)};
-    // id[2] = vec3 { 2.0f * (x * z - s * y), 2.0f * (y * z + s * x), 1.0f - 2.0f * (x * x + y * y) };
-    return glm::toMat3(r);
-}
-
-struct Force
-{
-    vec3 point;
-    vec3 strength;
-};
-
-constexpr auto box_inertia(Aabb extent, f32 mass) -> mat3x3
-{
-    // are we using the correct extent values?
-    auto const w = extent.max.x - extent.min.x;
-    auto const h = extent.max.y - extent.min.y;
-    auto const d = extent.max.z - extent.min.z;
-    f32 const c = 1.0f / 12.0f;
-    return mat3x3{
-        vec3{c * mass * (h * h + d * d), 0.0f, 0.0f},
-        vec3{0.0f, c * mass * (w * w + h * h), 0.0f},
-        vec3{0.0f, 0.0f, c * mass * (w * w + d * d)},
-    };
-}
-
-auto box_inertia0(Aabb bbox, float mass) -> mat3x3
+auto box_inertia0(vec3 extent, float mass) -> mat3x3
 {
     auto id = glm::zero<mat3x3>();
     // z-up need to check if this is correct
-    float h = bbox.max.z - bbox.min.z;
-    float w = bbox.max.x - bbox.min.x;
-    float d = bbox.max.y - bbox.min.y;
+    float h = extent.z;
+    float w = extent.x;
+    float d = extent.y;
     id[0][0] = (h * h + d * d) * mass / 12.0f;
     id[1][1] = (h * h + w * w) * mass / 12.0f;
     id[2][2] = (w * w + d * d) * mass / 12.0f;
     return id;
 }
 
-struct RigidBody
-{
-    Aabb extent;
-
-    global3 center_of_mass; // x_cm
-    vec3 velocity_lin;      // v_cm
-
-    Quaternion orientation; // r
-    vec3 velocity_ang;      // w
-
-    f32 mass;             // M
-    mat3x3 inertia_0_inv; // I_0^-1
-    mat3x3 inertia_inv;   // Rot_r I_0^-1 Rot_r^T
-
-    local3 torque;       // q - cleared
-    vec3 angular_moment; // L
-
-    RigidBody() = delete;
-
-    RigidBody(Aabb extent,
-              global3 center_of_mass,
-              vec3 linear_velocity,
-              Quaternion orientation,
-              vec3 velocity_rot,
-              f32 mass,
-              mat3x3 inertia_inv) : extent{extent},
-                                    center_of_mass{center_of_mass},
-                                    velocity_lin{linear_velocity},
-                                    orientation{orientation},
-                                    velocity_ang{velocity_rot},
-                                    mass{mass},
-                                    inertia_0_inv{inertia_inv},
-                                    angular_moment{vec3{0.0f}}
-    {
-    }
-
-    static auto new_still(Aabb extent, global3 center_of_mass, Quaternion orientation, f32 mass, mat3x3 inertia_inv) -> RigidBody
-    {
-        auto zero = vec3{0.0f};
-        return RigidBody{extent, center_of_mass, zero, orientation, zero, mass, inertia_inv};
-    }
-
-    auto inline clear_torque() -> void
-    {
-        torque = vec3{0.0f};
-    }
-
-    auto inline add_torque(Force const &force) -> void
-    {
-        vec3 x_i = force.point - center_of_mass;
-        torque += glm::cross(x_i, force.strength);
-    }
-
-    auto inline update_r(time_step_t time_step) -> void
-    {
-        Quaternion inter = Quaternion {};
-        inter.w = 0.0f;
-        inter[1] = velocity_ang[0];
-        inter[2] = velocity_ang[1];
-        inter[3] = velocity_ang[2];
-        inter = inter * orientation;
-        orientation += (inter * 0.5f * time_step);
-        orientation = glm::normalize(orientation);
-    }
-
-    auto inline update_L(time_step_t time_step) -> void
-    {
-        angular_moment += time_step * torque;
-    }
-
-    auto inline update_I() -> void
-    {
-        mat3x3 rot = quaternion_to_rotation(orientation);
-        mat3x3 rot_transpose = glm::transpose(rot);
-        // TODO: check if this is correct matmul
-        inertia_inv = rot * inertia_0_inv * rot_transpose;
-    }
-
-    auto inline update_w() -> void
-    {
-        velocity_ang = inertia_inv * angular_moment;
-    }
-
-    // convert position in local coordinates to global coordinates
-    auto inline position_of(vec3 local) -> vec3
-    {
-        return center_of_mass + glm::rotate(orientation, local);
-        // return center_of_mass + orientation.rotate(local);
-    }
-
-    // get the global velocity of given local position
-    auto inline velocity_of(vec3 local) const -> vec3
-    {
-        return velocity_lin + glm::cross(velocity_ang, local);
-    }
-};
 
 auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
 {
-    Aabb boundary = body.extent;
-    vec3 p0 = boundary.max;
-    vec3 p1 = boundary.min;
-    vec3 p2 = vec3{p0.x, p1.y, p0.z}; // top
-    vec3 p3 = vec3{p1.x, p0.y, p0.z}; // top
-    vec3 p4 = vec3{p1.x, p1.y, p0.z}; // bot
-    vec3 p5 = vec3{p0.x, p1.y, p1.z}; // bot
-    vec3 p6 = vec3{p1.x, p0.y, p1.z}; // bot
-    vec3 p7 = vec3{p1.x, p1.y, p1.z}; // bot
+    vec3 scale = body.extent;
 
     vec3 x_cm = body.center_of_mass;
     Quaternion r = body.orientation;
-    vec3 scale = boundary.max - boundary.min;
     renderer.drawCube(x_cm, r, scale);
-    // TODO
 }
 
 auto draw_force(Renderer &renderer, Force const &force) -> void
@@ -243,8 +96,6 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
         body.center_of_mass += time_step * body.velocity_lin;
         body.velocity_lin += time_step * force_pos / body.mass;
 
-        auto x_cm1 = body.center_of_mass; // 0
-        auto v_cm1 = body.velocity_lin;   // (1, 1, 0)
         // update variables
         body.update_r(time_step);
         body.update_L(time_step);
@@ -254,6 +105,8 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
         // when we draw the rigidbody since each point corresponds to a corner of our bbox
 
 #ifdef DEBUG
+        auto x_cm1 = body.center_of_mass; // 0
+        auto v_cm1 = body.velocity_lin;   // (1, 1, 0)
         auto r_1 = body.orientation;    // same as r0
         auto L_1 = body.angular_moment; // -0.5 0.5 -0.4
         std::cout << "x_cm1: " << x_cm1 << "\n"
@@ -275,19 +128,17 @@ struct RigidSceneSingleStep : public Scene
     auto initialize_values() -> void
     {
         auto const extent = vec3{1.0f, 0.6f, 0.5f};
-        auto const bbox = Aabb{-extent, extent};
         auto const x_cm = vec3{0.0f};
 
         auto const orientation = Quaternion{vec3{0.0f, 0.0f, 0.5f * glm::pi<f32>()}};
-        // Quaternion::from_euler(vec3 {0.0f, 0.0f, 0.5f * glm::pi<f32>()});
 
         std::cout << "orientation(r): " << orientation << "\n";
 
         f32 const mass = 2.0f;
-        auto inertia_inv = glm::inverse(box_inertia(bbox, mass));
+        auto inertia_inv = glm::inverse(box_inertia0(extent, mass));
 
         rigid_bodies = {
-            RigidBody::new_still(bbox, x_cm, orientation, mass, inertia_inv)};
+            RigidBody::new_still(extent, x_cm, orientation, mass, inertia_inv)};
 
         time_step = 2.0f;
 
@@ -310,6 +161,7 @@ struct RigidSceneSingleStep : public Scene
     };
 
     virtual auto simulateStep() -> void override {
+        forces.clear();
         if (play) {
             euler_one_step(rigid_bodies, forces, 0.01, 0.0);   
         }
