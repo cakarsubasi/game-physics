@@ -2,13 +2,15 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <vector>
+
+#include "Renderer.h"
 
 using vec3 = glm::vec3;
 using f32 = float;
 using mat3x3 = glm::mat3x3;
 using Quaternion = glm::quat;
 using time_step_t = float;
-
 
 struct Force
 {
@@ -21,12 +23,14 @@ inline auto quaternion_to_rotation(Quaternion r) -> mat3x3
     return glm::toMat3(r);
 }
 
+auto box_inertia0(vec3 extent, float mass) -> mat3x3;
+
 struct RigidBody
 {
     vec3 extent;
 
     vec3 center_of_mass; // x_cm
-    vec3 velocity_lin;      // v_cm
+    vec3 velocity_lin;   // v_cm
 
     Quaternion orientation; // r
     vec3 velocity_ang;      // w
@@ -35,7 +39,7 @@ struct RigidBody
     mat3x3 inertia_0_inv; // I_0^-1
     mat3x3 inertia_inv;   // Rot_r I_0^-1 Rot_r^T
 
-    vec3 torque;       // q - cleared
+    vec3 torque;         // q - cleared
     vec3 angular_moment; // L
 
     RigidBody() = delete;
@@ -45,22 +49,21 @@ struct RigidBody
               vec3 linear_velocity,
               Quaternion orientation,
               vec3 velocity_rot,
-              f32 mass,
-              mat3x3 inertia_inv) : extent{extent},
-                                    center_of_mass{center_of_mass},
-                                    velocity_lin{linear_velocity},
-                                    orientation{orientation},
-                                    velocity_ang{velocity_rot},
-                                    mass{mass},
-                                    inertia_0_inv{inertia_inv},
-                                    angular_moment{vec3{0.0f}}
+              f32 mass) : extent{extent},
+                          center_of_mass{center_of_mass},
+                          velocity_lin{linear_velocity},
+                          orientation{orientation},
+                          velocity_ang{velocity_rot},
+                          mass{mass},
+                          inertia_0_inv{glm::inverse(box_inertia0(extent, mass))},
+                          angular_moment{vec3{0.0f}}
     {
     }
 
-    static auto new_still(vec3 extent, vec3 center_of_mass, Quaternion orientation, f32 mass, mat3x3 inertia_inv) -> RigidBody
+    static auto new_still(vec3 extent, vec3 center_of_mass, Quaternion orientation, f32 mass) -> RigidBody
     {
         auto zero = vec3{0.0f};
-        return RigidBody{extent, center_of_mass, zero, orientation, zero, mass, inertia_inv};
+        return RigidBody{extent, center_of_mass, zero, orientation, zero, mass};
     }
 
     auto inline clear_torque() -> void
@@ -76,7 +79,7 @@ struct RigidBody
 
     auto inline update_r(time_step_t time_step) -> void
     {
-        Quaternion inter = Quaternion {};
+        Quaternion inter = Quaternion{};
         inter.w = 0.0f;
         inter[1] = velocity_ang[0];
         inter[2] = velocity_ang[1];
@@ -95,7 +98,6 @@ struct RigidBody
     {
         mat3x3 rot = quaternion_to_rotation(orientation);
         mat3x3 rot_transpose = glm::transpose(rot);
-        // TODO: check if this is correct matmul
         inertia_inv = rot * inertia_0_inv * rot_transpose;
     }
 
@@ -108,7 +110,6 @@ struct RigidBody
     auto inline position_of(vec3 local) -> vec3
     {
         return center_of_mass + glm::rotate(orientation, local);
-        // return center_of_mass + orientation.rotate(local);
     }
 
     // get the global velocity of given local position
@@ -117,3 +118,9 @@ struct RigidBody
         return velocity_lin + glm::cross(velocity_ang, local);
     }
 };
+
+auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void;
+
+auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void;
+
+auto draw_force(Renderer &renderer, Force const &force) -> void;
