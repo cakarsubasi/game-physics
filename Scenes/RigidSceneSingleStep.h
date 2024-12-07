@@ -2,6 +2,7 @@
 #pragma once
 #include "Scene.h"
 #include "sim/Quaternion.h"
+#include "sim/glm_print.h"
 #include <array>
 #include <iostream>
 
@@ -36,10 +37,28 @@ auto quaternion_to_rotation(Quaternion r) -> mat3x3 {
     return id;
 }
 
-auto euler_to_quaternion(vec3 euler) -> Quaternion {
-    // TODO
+/// @brief 
+/// @param euler euler angles in degrees
+/// @return 
+auto euler_to_quaternion(vec3 angles) -> Quaternion {
+    float phi1 = angles[0]; // need to ensure radians or degrees
+    float c1 = std::cos(phi1 / 2.0f);
+    float s1 = std::sin(phi1 / 2.0f);
+    auto q1 = Quaternion { c1, vec3 { s1, 0.0f, 0.0f }};
 
-    return Quaternion { 0.0f };
+    float phi2 = angles[1]; // need to ensure radians or degrees
+    float c2 = std::cos(phi2 / 2.0f);
+    float s2 = std::sin(phi2 / 2.0f);
+    auto q2 = Quaternion { c2, vec3 { 0.0f, s2, 0.0f }};
+
+    float phi3 = angles[2]; // need to ensure radians or degrees
+    float c3 = std::cos(phi3 / 2.0f);
+    float s3 = std::sin(phi3 / 2.0f);
+    auto q3 = Quaternion { c3, vec3 { 0.0f, 0.0f, s3 }};
+
+    Quaternion rotation = q1 * q2 * q3;
+
+    return rotation.normalize();
 }
 
 struct Force {
@@ -142,6 +161,16 @@ struct RigidBody {
     auto inline update_w() -> void {
         velocity_ang = inertia_inv * angular_moment;
     }
+
+    // convert position in local coordinates to global coordinates
+    auto inline position_of(vec3 local) -> vec3 {
+        return center_of_mass + orientation.rotate(local);
+    }
+
+    // get the global velocity of given local position
+    auto inline velocity_of(vec3 local) const -> vec3 {
+        return velocity_lin + glm::cross(velocity_ang, local);
+    }
 };
 
 auto draw_rigidbody(Renderer& renderer, RigidBody const& body) -> void {
@@ -208,7 +237,7 @@ struct RigidSceneSingleStep : public Scene
             RigidBody::new_still(extent2, c_o_m, orientation, mass, inertia_inv)
         };
 
-        time_step = 0.5f;
+        time_step = 2.0f;
         
         forces = {
             Force {
@@ -222,6 +251,12 @@ struct RigidSceneSingleStep : public Scene
     virtual auto init() -> void override
     {
         initialize_values();
+        auto const poi = vec3 { -0.3f, -0.5f, -0.25f };
+        euler_one_step(rigid_bodies, forces, time_step, 0.0f);
+
+        auto& rb = rigid_bodies.at(0);
+        std::cout << "pos: " << rb.position_of(poi) << "\n"
+                  << "vel: " << rb.velocity_of(poi) << "\n";
     };
 
     virtual auto simulateStep() -> void override {};
