@@ -1,4 +1,7 @@
 #include "RigidBody.h"
+#include "glm_print.h"
+
+//#define DEBUG
 
 auto box_inertia0(vec3 extent, float mass) -> mat3x3
 {
@@ -66,10 +69,20 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
         auto v_cm1 = body.velocity_lin;   // (1, 1, 0)
         auto r_1 = body.orientation;      // same as r0
         auto L_1 = body.angular_moment;   // -0.5 0.5 -0.4
+
+        auto I_0 = body.inertia_0_inv;
+        auto rot = quaternion_to_rotation(r_1);
+        auto inertia_inv = body.inertia_inv;
+        auto w = body.velocity_ang;
+
         std::cout << "x_cm1: " << x_cm1 << "\n"
                   << "v_cm1: " << v_cm1 << "\n"
                   << "r_1: " << r_1 << "\n"
-                  << "L_1: " << L_1 << "\n";
+                  << "L_1: " << L_1 << "\n"
+                  << "rot: " << rot << "\n"
+                  << "I-0: " << I_0 << "\n"
+                  << "I-1: " << inertia_inv << "\n"
+                  << "w:   " << w << "\n";
 #endif
     }
 }
@@ -84,5 +97,5 @@ auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
 
 auto draw_force(Renderer &renderer, Force const &force) -> void
 {
-    // TODO
+    renderer.drawLine(force.point, force.point + force.strength, vec3 { 0.8, 0.2, 0.2});
 }
