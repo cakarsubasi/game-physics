@@ -7,7 +7,7 @@
 #include <array>
 #include <iostream>
 
-#define DEBUG
+//#define DEBUG
 
 using vec3 = glm::vec3;
 using vec4 = glm::vec4;
@@ -78,7 +78,7 @@ auto box_inertia0(Aabb bbox, float mass) -> mat3x3
 
 struct RigidBody
 {
-    const Aabb extent;
+    Aabb extent;
 
     global3 center_of_mass; // x_cm
     vec3 velocity_lin;      // v_cm
@@ -138,6 +138,7 @@ struct RigidBody
         inter[3] = velocity_ang[2];
         inter = inter * orientation;
         orientation += (inter * 0.5f * time_step);
+        orientation = glm::normalize(orientation);
     }
 
     auto inline update_L(time_step_t time_step) -> void
@@ -179,10 +180,10 @@ auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
     vec3 p1 = boundary.min;
     vec3 p2 = vec3{p0.x, p1.y, p0.z}; // top
     vec3 p3 = vec3{p1.x, p0.y, p0.z}; // top
-    vec3 p4 = vec3{p1.x, p1.y, p0.z}; // top
-    vec3 p5 = vec3{p0.x, p1.y, p1.z}; // top
-    vec3 p6 = vec3{p1.x, p0.y, p1.z}; // top
-    vec3 p7 = vec3{p1.x, p1.y, p1.z}; // top
+    vec3 p4 = vec3{p1.x, p1.y, p0.z}; // bot
+    vec3 p5 = vec3{p0.x, p1.y, p1.z}; // bot
+    vec3 p6 = vec3{p1.x, p0.y, p1.z}; // bot
+    vec3 p7 = vec3{p1.x, p1.y, p1.z}; // bot
 
     vec3 x_cm = body.center_of_mass;
     Quaternion r = body.orientation;
@@ -310,7 +311,7 @@ struct RigidSceneSingleStep : public Scene
 
     virtual auto simulateStep() -> void override {
         if (play) {
-            euler_one_step(rigid_bodies, forces, 0.005, 0.0);   
+            euler_one_step(rigid_bodies, forces, 0.01, 0.0);   
         }
     };
 
