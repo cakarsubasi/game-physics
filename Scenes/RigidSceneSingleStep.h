@@ -37,30 +37,6 @@ auto quaternion_to_rotation(Quaternion r) -> mat3x3 {
     return id;
 }
 
-/// @brief 
-/// @param euler euler angles in degrees
-/// @return 
-auto euler_to_quaternion(vec3 angles) -> Quaternion {
-    float phi1 = angles[0]; // need to ensure radians or degrees
-    float c1 = std::cos(phi1 / 2.0f);
-    float s1 = std::sin(phi1 / 2.0f);
-    auto q1 = Quaternion { c1, vec3 { s1, 0.0f, 0.0f }};
-
-    float phi2 = angles[1]; // need to ensure radians or degrees
-    float c2 = std::cos(phi2 / 2.0f);
-    float s2 = std::sin(phi2 / 2.0f);
-    auto q2 = Quaternion { c2, vec3 { 0.0f, s2, 0.0f }};
-
-    float phi3 = angles[2]; // need to ensure radians or degrees
-    float c3 = std::cos(phi3 / 2.0f);
-    float s3 = std::sin(phi3 / 2.0f);
-    auto q3 = Quaternion { c3, vec3 { 0.0f, 0.0f, s3 }};
-
-    Quaternion rotation = q1 * q2 * q3;
-
-    return rotation.normalize();
-}
-
 struct Force {
     vec3 point;
     vec3 strength;
@@ -125,7 +101,8 @@ struct RigidBody {
               orientation { orientation },
               velocity_ang { velocity_rot },
               mass { mass },
-              inertia_0_inv { inertia_inv }
+              inertia_0_inv { inertia_inv },
+              angular_moment { vec3 { 0.0f} }
              {}
 
     static auto new_still(Aabb extent, global3 center_of_mass, Quaternion orientation, f32 mass, mat3x3 inertia_inv) -> RigidBody {
@@ -200,19 +177,41 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const& fo
         for (auto const& force : forces) {
             body.add_torque(force);
         }
+        auto q0 = body.torque; // -0.25 0.25 -0.2
+        std::cout << "q0: " << q0 << "\n";
     }
 
     for (auto &body: bodies) {
+        auto x_cm = body.center_of_mass; // 0
+        auto v_cm = body.velocity_lin;   // 0
+        auto r_0 = body.orientation;     // (0.707, 0, 0, 0.707)
+        auto L_0 = body.angular_moment;  // 0
+
+        std::cout << "x_cm: " << x_cm << "\n"
+        << "v_cm: " << v_cm << "\n"
+        << "r_0: " << r_0 << "\n"
+        << "L_0: " << L_0 << "\n";
+
         // euler step 1
         body.center_of_mass += time_step * body.velocity_lin;
         body.velocity_lin += time_step * force_pos / body.mass;
+
+        auto x_cm1 = body.center_of_mass; // 0
+        auto v_cm1 = body.velocity_lin; // (1, 1, 0)
         // update variables
         body.update_r(time_step);
+        auto r_1 = body.orientation; // r0
         body.update_L(time_step);
+        auto L_1 = body.angular_moment; // -0.5 0.5 -0.4
         body.update_I();
         body.update_w();
         // Euler step 2 is not performed here, but rather
         // when we draw the rigidbody since each point corresponds to a corner of our bbox
+
+        std::cout << "x_cm1: " << x_cm1 << "\n"
+        << "v_cm1: " << v_cm1 << "\n"
+        << "r_1: " << r_1 << "\n"
+        << "L_1: " << L_1 << "\n";
     }
 
 }
@@ -225,16 +224,19 @@ struct RigidSceneSingleStep : public Scene
 
     auto initialize_values() -> void
     {
-        auto const extent1 = vec3 { 1.0f, 0.6f, 0.5f };
-        auto const extent2 = Aabb { -extent1, extent1 };
-        auto const c_o_m = vec3 { 0.0f };
+        auto const extent = vec3 { 1.0f, 0.6f, 0.5f };
+        auto const bbox = Aabb { -extent, extent };
+        auto const x_cm = vec3 { 0.0f };
 
         auto const orientation = Quaternion::from_euler(vec3 {0.0f, 0.0f, 0.5f * glm::pi<f32>()});
+
+        std::cout << "orientation(r): " << orientation << "\n";
+
         f32 const mass = 2.0f;
-        auto inertia_inv = glm::inverse(box_inertia(extent2, mass));
+        auto inertia_inv = glm::inverse(box_inertia(bbox, mass));
         
         rigid_bodies = {
-            RigidBody::new_still(extent2, c_o_m, orientation, mass, inertia_inv)
+            RigidBody::new_still(bbox, x_cm, orientation, mass, inertia_inv)
         };
 
         time_step = 2.0f;
@@ -275,3 +277,4 @@ struct RigidSceneSingleStep : public Scene
     virtual auto onGUI() -> void override {};
     virtual ~RigidSceneSingleStep() override = default;
 };
+
