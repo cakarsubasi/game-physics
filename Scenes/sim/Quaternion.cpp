@@ -1,33 +1,18 @@
 #include "Quaternion.h"
 
-inline auto Quaternion::w() const -> float
-{
-    return inner[0];
-}
-
-inline auto Quaternion::v() const -> vec3
-{
-    return vec3{inner[1], inner[2], inner[3]};
-}
-
-inline auto Quaternion::norm() -> float
-{
-    return glm::length(inner);
-}
-
-auto Quaternion::operator=(Quaternion const& other) -> Quaternion &
+auto Quaternion::operator=(Quaternion const &other) -> Quaternion &
 {
     inner = other.inner;
     return *this;
 }
 
-auto Quaternion::operator+=(Quaternion const& rhs) -> Quaternion &
+auto Quaternion::operator+=(Quaternion const &rhs) -> Quaternion &
 {
     inner += rhs.inner;
     return *this;
 }
 
-auto Quaternion::operator*=(Quaternion const& rhs) -> Quaternion &
+auto Quaternion::operator*=(Quaternion const &rhs) -> Quaternion &
 {
     float s1 = w();
     float s2 = rhs.w();
@@ -40,8 +25,14 @@ auto Quaternion::operator*=(Quaternion const& rhs) -> Quaternion &
     return *this;
 }
 
-auto Quaternion::operator*=(float const& rhs) -> Quaternion &
+auto Quaternion::operator*=(float const &rhs) -> Quaternion &
 {
     inner *= rhs;
+    return *this;
+}
+
+auto Quaternion::operator/=(float const &rhs) -> Quaternion &
+{
+    inner /= rhs;
     return *this;
 }
