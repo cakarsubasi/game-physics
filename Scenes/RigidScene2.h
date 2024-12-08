@@ -10,6 +10,7 @@ using vec3 = glm::vec3;
 using vec4 = glm::vec4;
 using mat3x3 = glm::mat3x3;
 using f32 = float;
+using f64 = double;
 using time_step_t = f32;
 using Quaternion = glm::quat;
 
@@ -18,6 +19,7 @@ struct RigidScene2 : public Scene
     std::vector<RigidBody> rigid_bodies;
     std::vector<Force> forces;
     time_step_t time_step;
+    f64 time_cumulative;
 
     bool play = false;
 
@@ -36,6 +38,7 @@ struct RigidScene2 : public Scene
             RigidBody::new_still(extent, x_cm, orientation, mass)};
 
         time_step = 0.01f;
+        time_cumulative = 0.0;
 
         forces = {
             Force{
@@ -53,7 +56,11 @@ struct RigidScene2 : public Scene
     {
         if (play)
         {
+            time_cumulative += time_step;
             euler_one_step(rigid_bodies, forces, time_step, 0.0);
+        }
+        if (time_cumulative > 2.0) {
+            forces.clear();
         }
     };
 

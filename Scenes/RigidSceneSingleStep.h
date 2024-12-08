@@ -23,6 +23,8 @@ struct RigidSceneSingleStep : public Scene
     std::vector<Force> forces;
     time_step_t time_step;
 
+    Force visual_force;
+
     bool play = false;
 
     auto initialize_values() -> void
@@ -46,6 +48,8 @@ struct RigidSceneSingleStep : public Scene
                 vec3{0.3f, 0.5f, 0.25f},
                 vec3{1.0f, 1.0f, 0.0f},
             }};
+
+        visual_force = forces.at(0);
     }
 
     virtual auto init() -> void override
@@ -64,7 +68,7 @@ struct RigidSceneSingleStep : public Scene
         forces.clear();
         if (play)
         {
-            euler_one_step(rigid_bodies, forces, 0.01, 0.0);
+            euler_one_step(rigid_bodies, forces, 0.01 / (165.0f / 60.0f), 0.0);
         }
     };
 
@@ -79,6 +83,7 @@ struct RigidSceneSingleStep : public Scene
         {
             draw_force(renderer, force);
         }
+        draw_force(renderer, visual_force);
     };
 
     virtual auto onGUI() -> void override

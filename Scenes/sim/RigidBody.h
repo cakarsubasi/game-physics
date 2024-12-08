@@ -4,6 +4,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <vector>
 
+#include "glm_print.h"
 #include "Renderer.h"
 
 using vec3 = glm::vec3;
@@ -74,6 +75,7 @@ struct RigidBody
     auto inline add_torque(Force const &force) -> void
     {
         vec3 x_i = force.point - center_of_mass;
+        std::cout << "force point: " << x_i << "\n";
         torque += glm::cross(x_i, force.strength);
     }
 
@@ -81,9 +83,9 @@ struct RigidBody
     {
         Quaternion inter = Quaternion{};
         inter.w = 0.0f;
-        inter[1] = velocity_ang[0];
-        inter[2] = velocity_ang[1];
-        inter[3] = velocity_ang[2];
+        inter.x = velocity_ang.x;
+        inter.y = velocity_ang.y;
+        inter.z = velocity_ang.z;
         inter = inter * orientation;
         orientation += (inter * 0.5f * time_step);
         orientation = glm::normalize(orientation);

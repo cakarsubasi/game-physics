@@ -87,12 +87,28 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
     }
 }
 
+auto euler_one_step_collisions(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void {
+    for (auto const& rb1: bodies) {
+        for (auto const& rb2: bodies) {
+            if (&rb1 == &rb2) {
+                continue;
+            }
+            // TODO 
+        }
+    }
+}
+
 auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
 {
     vec3 scale = body.extent;
     vec3 x_cm = body.center_of_mass;
     Quaternion r = body.orientation;
     renderer.drawCube(x_cm, r, scale);
+
+    // linear velocity
+    renderer.drawLine(x_cm, x_cm + body.velocity_lin, vec3 {0.2, 0.8, 0.2});
+    // angular moment
+    renderer.drawLine(x_cm, x_cm + body.angular_moment, vec3 {0.2, 0.2, 0.8});
 }
 
 auto draw_force(Renderer &renderer, Force const &force) -> void
@@ -109,7 +125,8 @@ auto calculate_impulse(
     mat3x3 inertia_a,
     mat3x3 inertia_b,
     vec3 x_a,
-    vec3 x_b) -> f32
+    vec3 x_b) 
+    -> f32
 {
     f32 top = -(1.0f + elasticity) * glm::dot(velocity_rel, normal);
     vec3 bot1 = glm::cross(inertia_a * glm::cross(x_a, normal), x_a);
