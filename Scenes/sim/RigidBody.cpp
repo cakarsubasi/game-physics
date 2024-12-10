@@ -136,18 +136,18 @@ auto euler_one_step_collisions(std::vector<RigidBody> &bodies, std::vector<Force
             {
                 auto &rb1 = bodies.at(i);
                 auto &rb2 = bodies.at(j);
-                vec3 velocity_rel = rb1.velocity_lin - rb2.velocity_lin;
+                vec3 x_a = info.collisionPointWorld - rb1.center_of_mass;
+                vec3 x_b = info.collisionPointWorld - rb2.center_of_mass;
+                vec3 velocity_rel = rb1.velocity_of(x_a) - rb2.velocity_of(x_b);
                 // separating case
                 if (glm::dot(velocity_rel, info.normalWorld) > 0.0f) {
                     continue;
                 }
                 // find the impulse
-                vec3 x_a = info.collisionPointWorld - rb1.center_of_mass;
-                vec3 x_b = info.collisionPointWorld - rb2.center_of_mass;
                 f32 impulse = calculate_impulse(
                     info.normalWorld, 
                     velocity_rel, 
-                    0.1, // might wish to change this
+                    1.0, // might wish to change this
                     rb1.mass, 
                     rb2.mass, 
                     rb1.inertia_0_inv, 
