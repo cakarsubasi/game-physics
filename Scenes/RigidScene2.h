@@ -39,8 +39,6 @@ struct RigidScene2 : public Scene
 
         auto const orientation = Quaternion{vec3{0.0f, 0.0f, 0.5f * glm::pi<f32>()}};
 
-        std::cout << "orientation(r): " << orientation << "\n";
-
         f32 const mass = 2.0f;
 
         forces = {};

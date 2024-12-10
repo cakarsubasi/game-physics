@@ -13,7 +13,7 @@ using f32 = float;
 using time_step_t = f32;
 using Quaternion = glm::quat;
 
-struct RigidScene3 : public Scene
+struct RigidScene4 : public Scene
 {
     std::vector<RigidBody> rigid_bodies;
     std::vector<Force> forces;
@@ -41,7 +41,12 @@ struct RigidScene3 : public Scene
 
         rigid_bodies.at(1).velocity_lin = vec3 {-0.25f, 0.0f, 0.0f};
 
-        forces = {};
+        forces = {
+            //Force{
+            //    vec3{0.3f, 0.5f, 0.25f},
+            //    vec3{1.0f, 1.0f, 0.0f},
+            //}
+            };
     }
 
     virtual auto init() -> void override
@@ -75,5 +80,5 @@ struct RigidScene3 : public Scene
         ImGui::Checkbox("Play", &play);
         ImGui::SliderFloat("Time step", &time_step, 0.001, 0.1);
     };
-    virtual ~RigidScene3() override = default;
+    virtual ~RigidScene4() override = default;
 };
