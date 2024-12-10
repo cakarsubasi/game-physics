@@ -17,6 +17,6 @@ SceneCreator creator()
 std::map<std::string, SceneCreator> scenesCreators = {
     {"Demo Scene", creator<Scene1>()},
     {"Rigid Single Step", creator<RigidSceneSingleStep>()},
-    {"Rigid 2", creator<RigidScene2>()},
+    {"Simulation", creator<RigidScene2>()},
     // add more Scene types here
 };

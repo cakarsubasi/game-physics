@@ -75,7 +75,6 @@ struct RigidBody
     auto inline add_torque(Force const &force) -> void
     {
         vec3 x_i = force.point - center_of_mass;
-        std::cout << "force point: " << x_i << "\n";
         torque += glm::cross(x_i, force.strength);
     }
 
