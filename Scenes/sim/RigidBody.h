@@ -49,6 +49,9 @@ struct RigidBody
     /// L
     vec3 angular_moment;
 
+    bool visible;
+    bool fixed;
+
     RigidBody() = delete;
 
     RigidBody(vec3 extent,
@@ -63,7 +66,9 @@ struct RigidBody
                           velocity_ang{velocity_rot},
                           mass{mass},
                           inertia_0_inv{glm::inverse(box_inertia0(extent, mass))},
-                          angular_moment{vec3{0.0f}}
+                          angular_moment{vec3{0.0f}},
+                          visible {true},
+                          fixed {false}
     {
     }
 
@@ -82,6 +87,14 @@ struct RigidBody
     {
         vec3 x_i = force.point - center_of_mass;
         torque += glm::cross(x_i, force.strength);
+    }
+
+    auto inline update_linear(vec3 total_force, time_step_t time_step) -> void { 
+        center_of_mass += time_step * velocity_lin;
+        velocity_lin += time_step * total_force / mass;
+        if (fixed) {
+            velocity_lin = vec3 {0.0f};
+        }
     }
 
     auto inline update_r(time_step_t time_step) -> void
@@ -111,6 +124,9 @@ struct RigidBody
     auto inline update_w() -> void
     {
         velocity_ang = inertia_inv * angular_moment;
+        if (fixed) {
+            velocity_ang = vec3 { 0.0f };
+        }
     }
 
     // convert position in local coordinates to global coordinates
@@ -127,6 +143,7 @@ struct RigidBody
 };
 
 auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void;
+
 auto euler_one_step_collisions(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void;
 
 auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void;

@@ -30,11 +30,12 @@ struct RigidScene3 : public Scene
         auto const orientation = Quaternion{vec3{0.0f, 0.0f, 0.5f * glm::pi<f32>()}};
         auto const orientation2 = Quaternion{vec3{0.0f, 0.0f * glm::pi<f32>(), 0.25f * glm::pi<f32>()}};
 
-        f32 const mass = 2.0f;
+        f32 const mass = 7.0f;
+        f32 const mass2 = 2.0f;
 
         rigid_bodies = {
             RigidBody::new_still(extent, x_cm, orientation, mass),
-            RigidBody::new_still(extent, x_cm2, orientation2, mass),
+            RigidBody::new_still(extent, x_cm2, orientation2, mass2),
             };
 
         time_step = 0.01f;

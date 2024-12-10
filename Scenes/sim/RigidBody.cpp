@@ -23,6 +23,7 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
     {
         total_force += force.strength;
     }
+    total_force -= vec3 {0.0f, 0.0f, gravity};
 
     // calculate individual torques (q)
     for (auto &body : bodies)
@@ -53,8 +54,7 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
 #endif
 
         // euler step 1
-        body.center_of_mass += time_step * body.velocity_lin;
-        body.velocity_lin += time_step * total_force / body.mass;
+        body.update_linear(total_force, time_step);
 
         // update variables
         body.update_r(time_step);
@@ -147,7 +147,7 @@ auto euler_one_step_collisions(std::vector<RigidBody> &bodies, std::vector<Force
                 f32 impulse = calculate_impulse(
                     info.normalWorld, 
                     velocity_rel, 
-                    1.0, // might wish to change this
+                    0.3, // might wish to change this
                     rb1.mass, 
                     rb2.mass, 
                     rb1.inertia_0_inv, 
@@ -169,6 +169,9 @@ auto euler_one_step_collisions(std::vector<RigidBody> &bodies, std::vector<Force
 
 auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void
 {
+    if (!body.visible) {
+        return;
+    }
     vec3 scale = body.extent;
     vec3 x_cm = body.center_of_mass;
     Quaternion r = body.orientation;
