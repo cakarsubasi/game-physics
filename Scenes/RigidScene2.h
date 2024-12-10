@@ -99,6 +99,8 @@ struct RigidScene2 : public Scene
     {
         ImGui::Checkbox("Play", &play);
 
+        ImGui::SliderFloat("Time step", &time_step, 0.001, 0.1);
+
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
             auto current_pos = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
