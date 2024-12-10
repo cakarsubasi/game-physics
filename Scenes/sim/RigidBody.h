@@ -6,10 +6,12 @@
 
 #include "glm_print.h"
 #include "Renderer.h"
+#include "../CollisionDetection.h"
 
 using vec3 = glm::vec3;
 using f32 = float;
 using mat3x3 = glm::mat3x3;
+using mat4x4 = glm::mat4x4;
 using Quaternion = glm::quat;
 using time_step_t = float;
 
@@ -36,12 +38,16 @@ struct RigidBody
     Quaternion orientation; // r
     vec3 velocity_ang;      // w
 
-    f32 mass;             // M
-    mat3x3 inertia_0_inv; // I_0^-1
-    mat3x3 inertia_inv;   // Rot_r I_0^-1 Rot_r^T
-
-    vec3 torque;         // q - cleared
-    vec3 angular_moment; // L
+    /// M
+    f32 mass;
+    /// I_0^-1
+    mat3x3 inertia_0_inv; 
+    /// Rot_r I_0^-1 Rot_r^T
+    mat3x3 inertia_inv;   
+    /// q - cleared
+    vec3 torque;         
+    /// L
+    vec3 angular_moment;
 
     RigidBody() = delete;
 
@@ -75,7 +81,6 @@ struct RigidBody
     auto inline add_torque(Force const &force) -> void
     {
         vec3 x_i = force.point - center_of_mass;
-        std::cout << "force point: " << x_i << "\n";
         torque += glm::cross(x_i, force.strength);
     }
 
@@ -122,6 +127,7 @@ struct RigidBody
 };
 
 auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void;
+auto euler_one_step_collisions(std::vector<RigidBody> &bodies, std::vector<Force> const &forces, time_step_t time_step, f32 gravity) -> void;
 
 auto draw_rigidbody(Renderer &renderer, RigidBody const &body) -> void;
 
