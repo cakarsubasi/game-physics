@@ -85,6 +85,7 @@ auto euler_one_step(std::vector<RigidBody> &bodies, std::vector<Force> const &fo
                   << "w:   " << w << "\n";
 #endif
     }
+
 }
 
 auto calculate_impulse(
