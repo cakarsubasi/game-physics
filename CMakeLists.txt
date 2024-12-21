@@ -37,6 +37,9 @@ add_executable(Template
 	src/Camera.cpp
 	src/Colormap.h
 	src/Colormap.cpp
+		Scenes/SingleStep.cpp
+		Scenes/SingleStep.h
+		Scenes/ExplicitSimulation.h
 )
 
 target_compile_definitions(Template PRIVATE
